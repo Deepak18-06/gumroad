@@ -530,6 +530,22 @@ describe Exports::PurchaseExportService do
         end
       end
     end
+
+    describe "tax type field" do
+      it "includes the tax type (VAT, GST, or sales tax) in the CSV export" do
+        @purchase.update!(was_purchase_taxable: true, was_tax_excluded_from_price: true, tax_cents: 110, country: "Italy")
+        allow(@purchase).to receive(:tax_label).and_return("Sales tax")
+        row = last_data_row
+        expect(field_value(row, "Tax Type")).to eq("Sales tax")
+      end
+
+      it "is blank if the purchase is not taxable" do
+        @purchase.update!(was_purchase_taxable: false)
+        allow(@purchase).to receive(:tax_label).and_return(nil)
+        row = last_data_row
+        expect(field_value(row, "Tax Type")).to be_nil
+      end
+    end
   end
 
   def field_index(name)
